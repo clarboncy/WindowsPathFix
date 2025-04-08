@@ -1,54 +1,81 @@
 # Windows PATH Repair Tool (2025 Edition)
 
-## Overview
-The Windows PATH Repair Tool is a comprehensive solution for repairing and optimizing your Windows PATH environment variables. It includes an extensive database of potential PATH directories updated for Windows 11 as of April 2025, ensuring all your command-line tools and applications work correctly.
+A comprehensive repair tool for Windows PATH environment variables that automatically finds and fixes issues with your system and user PATH.
 
-## Features
-- 🔍 **Intelligent Detection**: Automatically detects installed tools and applications
-- 🧹 **Clean-up**: Removes duplicates and invalid paths
-- 🛡️ **Backup Protection**: Automatically backs up your current PATH variables before making changes
-- 🧩 **Comprehensive Database**: Includes all common PATH directories for Windows 11 systems
-- 🔄 **Separate User/System Paths**: Properly organizes paths between User and System variables
+## 🔍 Problem
 
-## Requirements
-- Windows 10 or 11
-- PowerShell 5.1 or later
-- Administrator privileges (to update System PATH)
+The Windows PATH environment variable is critical for accessing command-line tools and applications, but it often becomes cluttered, contains invalid entries, or is missing essential directories. This can lead to "command not found" errors and other frustrating issues that affect productivity.
 
-## Installation
-No installation required! Simply download the script and run it with PowerShell.
+## ✨ Solution
 
-## Usage
-1. Right-click on `Windows-PATH-Repair.ps1` and select "Run with PowerShell" (or open PowerShell as Administrator and navigate to the script)
-2. Review the discovered directories
-3. Confirm the changes when prompted
-4. Restart your terminal/command prompt to use the updated PATH
+This PowerShell script automates the process of repairing and optimizing your Windows PATH variables by:
+
+1. **Backing up** your current PATH settings before making any changes
+2. **Adding essential Windows system directories** that should always be in your PATH
+3. **Finding and including directories** for development tools installed on your system
+4. **Removing duplicates and invalid paths** that slow down command resolution
+5. **Properly setting both System and User PATH variables** to respect Windows best practices
+
+## 🚀 Features
+
+- **Comprehensive Directory Discovery**: Automatically finds common directories for programming languages, developer tools, and utilities
+- **Smart Path Detection**: Uses wildcard patterns to find directories across different versions of the same software
+- **Automatic Tool Detection**: Searches for 50+ common developer tools and adds their locations to your PATH
+- **Backup and Restore**: Creates timestamped backups of your PATH settings before making changes
+- **User/System Separation**: Properly organizes directories between User and System PATH variables
+
+## 🗂️ Supported Tools and Directories
+
+The tool automatically detects and adds directories for:
+
+- **Programming Languages**: Python, Node.js, Java (all JDK variants), .NET, Go, Ruby, PHP, Rust, Perl, Dart, etc.
+- **Developer Tools**: Git, Docker, Kubernetes, Terraform, VS Code, PowerShell, etc.
+- **Build Tools**: Maven, Gradle, npm, yarn, pip, etc.
+- **Database Tools**: PostgreSQL, MySQL, MongoDB, SQLite, Redis, etc.
+- **Virtualization**: VirtualBox, VMware, Vagrant, etc.
+- **And many more!**
+
+## 🔧 Usage
+
+### Option 1: Run with Administrator Privileges (Recommended)
+
+Double-click the `Run-PATH-Repair-Admin.bat` file to launch the script with administrator privileges (required to modify the System PATH).
+
+### Option 2: Run Manually from PowerShell
+
+1. Open a PowerShell prompt as Administrator
+2. Navigate to the script directory
+3. Run: `.\Windows-PATH-Repair.ps1`
 
 ### Advanced Options
-You can run the script with various parameters:
+
+The script supports several command-line parameters:
 
 ```powershell
-.\Windows-PATH-Repair.ps1 -Force                # Skip confirmation prompts
-.\Windows-PATH-Repair.ps1 -SkipBackup           # Skip backup of current PATH
-.\Windows-PATH-Repair.ps1 -SystemPathOnly       # Only fix System PATH
-.\Windows-PATH-Repair.ps1 -UserPathOnly         # Only fix User PATH
-.\Windows-PATH-Repair.ps1 -Verbose              # Show detailed information
-.\Windows-PATH-Repair.ps1 -ShowFoundTools       # Show list of all found tools
-.\Windows-PATH-Repair.ps1 -ThoroughSearch       # More thorough but slower search
+.\Windows-PATH-Repair.ps1 [-Force] [-SkipBackup] [-SystemPathOnly] [-UserPathOnly] [-ShowFoundTools] [-Verbose] [-ThoroughSearch] [-IgnoreAccessErrors] [-MaxSearchDepth <depth>]
 ```
 
-## Safety Features
-- Current PATH variables are backed up to `%USERPROFILE%\PathBackups` before any changes
-- The script will ask for confirmation before applying changes
-- System PATH changes require Administrator privileges
+- `-Force`: Skip confirmation prompts
+- `-SkipBackup`: Don't create backup files
+- `-SystemPathOnly`: Only fix the System PATH (not User PATH)
+- `-UserPathOnly`: Only fix the User PATH (not System PATH)
+- `-ShowFoundTools`: Display a list of all development tools found
+- `-Verbose`: Show detailed information during execution
+- `-ThoroughSearch`: Perform a more thorough but slower search
+- `-IgnoreAccessErrors`: Ignore access denied errors during searches
+- `-MaxSearchDepth <depth>`: Maximum folder depth to search (default: 4)
 
-## What's Fixed
-- Missing essential Windows system directories
-- Missing development tool directories (Python, Java, Node.js, Git, etc.)
-- Duplicate entries
-- Invalid/non-existent paths
-- Incorrect path separators
-- Improperly organized User vs System paths
+## ⚠️ Important Notes
 
-## Support
-For issues or questions, please contact your system administrator or open an issue in the repository.
+- The script must be run with Administrator privileges to update the System PATH
+- Always restart your terminal or command prompt after running the script to use the updated PATH
+- Backups are stored in `%USERPROFILE%\PathBackups`
+
+## 📋 Requirements
+
+- Windows 10 or Windows 11
+- PowerShell 5.1 or later
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
