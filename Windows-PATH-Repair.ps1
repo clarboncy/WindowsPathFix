@@ -62,102 +62,96 @@ if (-not $SkipBackup) {
 $VerboseOutput = $VerbosePreference -eq 'Continue'
 
 # Define essential PATH directories
+
+# 1. Critical system directories – must always be present on Windows
 $criticalSystemDirs = @(
-    # Core Windows directories
-    "$env:SystemRoot\System32",                   # Primary system commands
-    "$env:SystemRoot",                            # Windows root
-    "$env:SystemRoot\System32\Wbem",              # WMI commands
-    "$env:SystemRoot\System32\WindowsPowerShell\v1.0", # PowerShell
-    "$env:SystemRoot\System32\OpenSSH",           # SSH commands
-    "$env:SystemRoot\SysWOW64\WindowsPowerShell\v1.0" # 32-bit PowerShell
+    "$env:SystemRoot\System32",                          # Core system binaries
+    "$env:SystemRoot",                                   # Windows root (e.g. explorer.exe)
+    "$env:SystemRoot\System32\Wbem",                     # WMI (Windows Management Instrumentation)
+    "$env:SystemRoot\System32\WindowsPowerShell\v1.0",   # Windows PowerShell (default)
+    "$env:SystemRoot\SysWOW64\WindowsPowerShell\v1.0",   # 32-bit PowerShell (on 64-bit systems)
+    "$env:SystemRoot\System32\OpenSSH"                   # OpenSSH (if installed)
 )
 
+# 2. Common system directories – often added by Microsoft products and essential frameworks
 $commonSystemDirs = @(
-    # Windows management directories
-    "$env:SystemRoot\Microsoft.NET\Framework64\v4.0.30319",  # .NET Framework 64-bit
-    "$env:SystemRoot\Microsoft.NET\Framework\v4.0.30319",    # .NET Framework 32-bit
-    "$env:ProgramFiles\Microsoft\Azure CLI",         # Azure CLI
-    "$env:ProgramFiles\PowerShell\7",                # PowerShell 7
-    "$env:ProgramFiles\dotnet",                      # .NET Core
-    
-    # Common development tools
-    "$env:ProgramFiles\Git\cmd",                     # Git for Windows
-    "$env:ProgramFiles\Git\mingw64\bin",             # Git MinGW tools
-    "$env:ProgramFiles\Git\usr\bin",                 # Git Unix tools
-    "$env:ProgramFiles\nodejs",                      # Node.js
-    "$env:ProgramFiles\Docker\Docker\resources\bin",  # Docker CLI
-    
-    # Microsoft SQL Server
-    "$env:ProgramFiles\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn",
-    "$env:ProgramFiles\Microsoft SQL Server\150\Tools\Binn",
-    "${env:ProgramFiles(x86)}\Microsoft SQL Server\150\Tools\Binn",
-    "${env:ProgramFiles(x86)}\Microsoft SQL Server\150\DTS\Binn"
+    "$env:SystemRoot\Microsoft.NET\Framework64\v4.0.30319",   # .NET Framework (64-bit)
+    "$env:SystemRoot\Microsoft.NET\Framework\v4.0.30319",     # .NET Framework (32-bit)
+    "$env:ProgramFiles\Microsoft\Azure CLI",                # Azure CLI (default installation)
+    "$env:ProgramFiles\PowerShell\7",                       # PowerShell 7+
+    "$env:ProgramFiles\dotnet",                             # .NET Core SDK & Runtime
+    # Add Chocolatey bin (commonly installed to ProgramData)
+    "$env:ProgramData\chocolatey\bin"
 )
 
+# 3. Application directories – include language runtimes, development tool executables, editors, and database tools
 $applicationDirs = @(
-    # Programming languages
-    "$env:ProgramFiles\Python*",                   # Python (main)
-    "$env:ProgramFiles\Python*\Scripts",           # Python scripts
-    "${env:ProgramFiles(x86)}\Python*",            # Python 32-bit
-    "${env:ProgramFiles(x86)}\Python*\Scripts",    # Python 32-bit scripts
-    "$env:ProgramFiles\Ruby*\bin",                 # Ruby
-    "$env:ProgramFiles\PHP*",                      # PHP
-    "$env:ProgramFiles\Rust\bin",                  # Rust
-    "$env:ProgramFiles\Perl*\bin",                 # Perl
-    "$env:ProgramFiles\nodejs\node_modules\npm\bin", # NPM
-    "$env:ProgramFiles\Go\bin",                    # Go
-    
-    # Development tools and editors
-    "$env:ProgramFiles\Microsoft VS Code\bin",     # VS Code
-    "$env:ProgramFiles\JetBrains\*\bin",          # JetBrains IDEs
-    
-    # Database tools
-    "$env:ProgramFiles\PostgreSQL\*\bin",          # PostgreSQL
-    "$env:ProgramFiles\MySQL\MySQL*\bin",          # MySQL
-    "$env:ProgramFiles\MongoDB\Server\*\bin",      # MongoDB
-    "$env:ProgramFiles\Redis\*",                   # Redis
-    
-    # Utility tools
-    "$env:ProgramFiles\cURL\bin",                 # cURL
-    "$env:ProgramFiles\7-Zip",                    # 7-Zip
-    
-    # Virtualization and containers
-    "$env:ProgramFiles\Oracle\VirtualBox",        # VirtualBox
-    "$env:ProgramFiles\VMware\*\bin",            # VMware
-    "$env:ProgramFiles\HashiCorp\Vagrant\bin",    # Vagrant
-    "$env:ProgramFiles\terraform",                # Terraform
-    "$env:ProgramFiles\kubernetes\*\bin"          # Kubernetes tools
+    # Programming languages and runtimes:
+    "$env:ProgramFiles\Python*",                           # Python installations (64-bit)
+    "$env:ProgramFiles\Python*\Scripts",                   # Python scripts (64-bit)
+    "${env:ProgramFiles(x86)}\Python*",                    # Python installations (32-bit)
+    "${env:ProgramFiles(x86)}\Python*\Scripts",            # Python scripts (32-bit)
+    "$env:ProgramFiles\Ruby*\bin",                         # Ruby executables
+    "$env:ProgramFiles\PHP*",                              # PHP
+    "$env:ProgramFiles\Rust\bin",                          # Rust toolchain (rustc, cargo)
+    "$env:ProgramFiles\Perl*\bin",                         # Perl
+    "$env:ProgramFiles\nodejs",                            # Node.js core executables
+    "$env:ProgramFiles\nodejs\node_modules\npm\bin",        # NPM CLI tools
+    "$env:ProgramFiles\Go\bin",                            # Go language
+    # Editors/IDEs:
+    "$env:ProgramFiles\Microsoft VS Code\bin",             # Visual Studio Code (system install)
+    "$env:ProgramFiles\JetBrains\*\bin",                   # JetBrains IDEs (varies by product)
+    # Database and related tools:
+    "$env:ProgramFiles\PostgreSQL\*\bin",                  # PostgreSQL
+    "$env:ProgramFiles\MySQL\MySQL*\bin",                  # MySQL
+    "$env:ProgramFiles\MongoDB\Server\*\bin",              # MongoDB
+    "$env:ProgramFiles\Redis\*",                           # Redis (if installed)
+    # Utility and archiving tools:
+    "$env:ProgramFiles\cURL\bin",                          # cURL
+    "$env:ProgramFiles\7-Zip",                             # 7-Zip (CLI executable typically in this folder)
+    "$env:ProgramFiles\Git\cmd",                           # Git CLI commands
+    "$env:ProgramFiles\Git\mingw64\bin",                   # Git's MinGW tools
+    "$env:ProgramFiles\Git\usr\bin",                       # Git's Unix tools
+    # Virtualization, container, and infrastructure tools:
+    "$env:ProgramFiles\Oracle\VirtualBox",                 # VirtualBox
+    "$env:ProgramFiles\VMware\*\bin",                      # VMware tools (if installed)
+    "$env:ProgramFiles\HashiCorp\Vagrant\bin",             # Vagrant
+    "$env:ProgramFiles\terraform",                         # Terraform (if installed)
+    "$env:ProgramFiles\kubernetes\*\bin",                  # Kubernetes CLI tools (if installed)
+    # Additional Git LFS folder, if installed:
+    "$env:ProgramFiles\Git LFS"
 )
 
-# Java has many possible installation locations - include all common ones
+# 4. Java directories – accounts for multiple vendors and installation types
 $javaDirs = @(
-    # Oracle Java
-    "$env:ProgramFiles\Java\jdk*\bin",            # Oracle JDK 64-bit
-    "$env:ProgramFiles\Java\jre*\bin",            # Oracle JRE 64-bit
-    "${env:ProgramFiles(x86)}\Java\jdk*\bin",     # Oracle JDK 32-bit
-    "${env:ProgramFiles(x86)}\Java\jre*\bin",     # Oracle JRE 32-bit
-    # OpenJDK
-    "$env:ProgramFiles\AdoptOpenJDK\*\bin",       # AdoptOpenJDK
-    "$env:ProgramFiles\Eclipse Adoptium\*\bin",   # Eclipse Adoptium/Temurin
-    "$env:ProgramFiles\OpenJDK\*\bin",            # OpenJDK
-    "$env:ProgramFiles\Amazon Corretto\*\bin",    # Amazon Corretto
-    "$env:ProgramFiles\Microsoft\jdk-*\bin",      # Microsoft OpenJDK
-    # Other common Java paths
-    "$env:ProgramData\Oracle\Java\javapath",      # Common Oracle location
-    "$env:ProgramFiles\Common Files\Oracle\Java\javapath", # Oracle common files
-    "$env:JAVA_HOME\bin"                          # Java from JAVA_HOME
+    "$env:ProgramFiles\Java\jdk*\bin",                # Oracle JDK (64-bit)
+    "$env:ProgramFiles\Java\jre*\bin",                # Oracle JRE (64-bit)
+    "${env:ProgramFiles(x86)}\Java\jdk*\bin",         # Oracle JDK (32-bit)
+    "${env:ProgramFiles(x86)}\Java\jre*\bin",         # Oracle JRE (32-bit)
+    "$env:ProgramFiles\AdoptOpenJDK\*\bin",           # AdoptOpenJDK/Adoptium (64-bit)
+    "$env:ProgramFiles\Eclipse Adoptium\*\bin",       # Eclipse Adoptium/Temurin
+    "$env:ProgramFiles\OpenJDK\*\bin",                # OpenJDK (if installed)
+    "$env:ProgramFiles\Amazon Corretto\*\bin",        # Amazon Corretto
+    "$env:ProgramFiles\Microsoft\jdk-*\bin",          # Microsoft OpenJDK
+    # Common Oracle javapath locations:
+    "$env:ProgramData\Oracle\Java\javapath",          # Oracle-provided symlink path
+    "$env:ProgramFiles\Common Files\Oracle\Java\javapath",
+    "$env:JAVA_HOME\bin"                              # Fallback if JAVA_HOME is set
 )
 
+# 5. User-specific directories – for user-level tool installations, shims, and global packages
 $userSpecificDirs = @(
-    "$env:USERPROFILE\.dotnet\tools",            # .NET Core user tools
-    "$env:USERPROFILE\AppData\Roaming\npm",      # NPM global packages
-    "$env:USERPROFILE\AppData\Local\Microsoft\WindowsApps", # Windows Store apps
-    "$env:USERPROFILE\.cargo\bin",               # Rust Cargo
-    "$env:USERPROFILE\go\bin",                   # Go user packages
-    "$env:USERPROFILE\.deno\bin",                # Deno
-    "$env:USERPROFILE\AppData\Local\Yarn\bin",   # Yarn packages
-    "$env:USERPROFILE\AppData\Local\Programs\Python\Python*\Scripts", # Python user scripts
-    "$env:USERPROFILE\AppData\Local\Programs\Microsoft VS Code\bin" # VS Code user install
+    "$env:USERPROFILE\.dotnet\tools",                # .NET Core global tools installed via dotnet tool install
+    "$env:USERPROFILE\AppData\Roaming\npm",          # Global NPM packages (scripts)
+    "$env:USERPROFILE\AppData\Local\Microsoft\WindowsApps",  # Windows Store apps
+    "$env:USERPROFILE\.cargo\bin",                   # Rust (Cargo) binaries
+    "$env:USERPROFILE\go\bin",                       # Go user-installed packages
+    "$env:USERPROFILE\.deno\bin",                    # Deno (if installed)
+    "$env:USERPROFILE\AppData\Local\Yarn\bin",       # Yarn global binaries
+    "$env:USERPROFILE\AppData\Local\Programs\Python\Python*\Scripts", # Python user install scripts
+    "$env:USERPROFILE\AppData\Local\Programs\Microsoft VS Code\bin", # VS Code user install
+    # Scoop package manager shims (if using Scoop):
+    "$env:USERPROFILE\scoop\shims"
 )
 
 # Function to check if a directory exists and expand wildcards if needed
@@ -232,16 +226,45 @@ Function Find-ExecutableTools {
     )
     
     $executablesToFind = @(
-        "docker.exe", "kubectl.exe", "terraform.exe", "ansible.exe", "vagrant.exe",
-        "composer.bat", "hugo.exe", "aws.exe", "az.cmd", "gcloud.cmd",
+        # Containerization & Orchestration Tools
+        "docker.exe", "kubectl.exe", "minikube.exe", "kind.exe", "skaffold.exe",
+        "helm.exe", "istioctl.exe",
+    
+        # Infrastructure as Code & Provisioning
+        "terraform.exe", "ansible.exe", "vagrant.exe",
+    
+        # Static Site & Documentation Tools
+        "composer.bat", "hugo.exe",
+    
+        # Cloud CLI Tools
+        "aws.exe", "az.cmd", "gcloud.cmd", "ibmcloud.exe", "cf.exe", "heroku.exe",
+    
+        # Build Tools & Package Managers
         "mvn.cmd", "gradle.bat", "npm.cmd", "yarn.cmd", "tsc.cmd", "dotnet.exe",
-        "code.cmd", "java.exe", "javac.exe", "python.exe", "pip.exe", "ruby.exe",
-        "perl.exe", "php.exe", "node.exe", "flutter.bat", "dart.exe", "go.exe",
-        "rustc.exe", "cargo.exe", "gcc.exe", "clang.exe", "cmake.exe", "make.exe",
-        "helm.exe", "istioctl.exe", "minikube.exe", "kind.exe", "skaffold.exe",
-        "powershell.exe", "pwsh.exe", "adb.exe", "git.exe", "svn.exe", "hg.exe",
-        "mongo.exe", "psql.exe", "mysql.exe", "sqlite3.exe", "redis-cli.exe"
+        "msbuild.exe", "devenv.exe", "vstest.console.exe", "nuget.exe",
+        "scoop.exe", "winget.exe", "choco.exe",
+    
+        # Language Runtimes/Compilers/Interpreters
+        "java.exe", "javac.exe", "python.exe", "pip.exe", "ruby.exe", "perl.exe",
+        "php.exe", "node.exe", "flutter.bat", "dart.exe", "go.exe",
+        "rustc.exe", "cargo.exe", "gcc.exe", "clang.exe", "scala.exe", "kotlinc.exe",
+    
+        # C/C++ Build Systems & Compilers (from MSVC)
+        "cmake.exe", "make.exe", "nmake.exe", "cl.exe",
+    
+        # Version Control Utilities
+        "git.exe", "svn.exe", "hg.exe",
+    
+        # Database & CLI Utilities
+        "mongo.exe", "psql.exe", "mysql.exe", "sqlite3.exe", "redis-cli.exe",
+    
+        # Shell & Terminal Utilities
+        "powershell.exe", "pwsh.exe", "adb.exe",
+    
+        # Additional System/Utility Tools
+        "7z.exe", "curl.exe", "wget.exe", "vswhere.exe"
     )
+
     
     foreach ($root in $searchRoots) {
         if ($VerboseOutput) {
