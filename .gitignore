@@ -1,0 +1,18 @@
+# Windows system files
+Thumbs.db
+desktop.ini
+
+# PowerShell logs
+*.log
+
+# User-specific files
+*.user
+*.suo
+*.userprefs
+
+# Backup files
+*~
+*.bak
+
+# Path repair generated backups
+PathBackups/
