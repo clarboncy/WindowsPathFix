@@ -1,3 +1,5 @@
+Could not find this anywhere online after goofing up my PATH variables so here is the fix for those of you with the issue :)
+
 # Windows PATH Repair Tool (2025 Edition)
 
 A comprehensive repair tool for Windows PATH environment variables that automatically finds and fixes issues with your system and user PATH.
