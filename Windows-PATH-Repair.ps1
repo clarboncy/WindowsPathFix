@@ -14,7 +14,7 @@
     as of April 2025 for Windows 11.
 
 .NOTES
-    Author: Path Fix Project
+    Author: Clarboncy
     Version: 1.0
     Date: 2025-04-08
     Requirements: Windows 10/11, PowerShell 5.1 or later
