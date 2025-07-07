@@ -245,13 +245,13 @@ function Find-AndAddToolPaths {
                     $fullPath = Join-Path $dir.FullName $binary
                     if (Test-Path $fullPath -PathType Leaf -ErrorAction SilentlyContinue) {
                         # If it's a file, add its parent directory
-                        $foundPaths.Add($dir.FullName) | Out-Null
-                        $foundTools.Add("$($dir.FullName)\$binary") | Out-Null
+                        [void]$foundPaths.Add($dir.FullName)
+                        [void]$foundTools.Add("$($dir.FullName)\$binary")
                         Write-Verbose "Found tool binary '$binary' in '$dir.FullName'"
                     } elseif (Test-Path $fullPath -PathType Container -ErrorAction SilentlyContinue) {
                         # If it's a directory (like 'bin' or 'Scripts'), add it directly
-                        $foundPaths.Add($fullPath) | Out-Null
-                        $foundTools.Add($fullPath) | Out-Null
+                        [void]$foundPaths.Add($fullPath)
+                        [void]$foundTools.Add($fullPath)
                         Write-Verbose "Found tool directory '$binary' in '$fullPath'" # Corrected here
                     }
                 }
@@ -274,7 +274,7 @@ function Find-AndAddToolPaths {
         Write-Host "-------------------`n" -ForegroundColor Yellow
     }
 
-    return $foundPaths.ToArray()
+    return $foundPaths
 }
 
 # --- Main Script Logic ---
@@ -357,24 +357,31 @@ function Clean-PathEntries {
         [Parameter(Mandatory=$true)]
         [string[]]$PathEntries
     )
-    $cleanedPaths = New-Object System.Collections.Generic.HashSet[string]([System.StringComparer]::OrdinalIgnoreCase)
-    $invalidPaths = New-Object System.Collections.Generic.List[string]
+    $cleanedPaths = @()
+    $invalidPaths = @()
 
     foreach ($path in $PathEntries) {
-        $path = $path.Trim()
-        if ([string]::IsNullOrWhiteSpace($path)) {
+        $trimmedPath = $path.Trim()
+        if ([string]::IsNullOrWhiteSpace($trimmedPath)) {
             continue # Skip empty entries
         }
-        if (Test-Path $path -PathType Container -ErrorAction SilentlyContinue) {
-            $cleanedPaths.Add($path) | Out-Null
+        if (Test-Path $trimmedPath -PathType Container -ErrorAction SilentlyContinue) {
+            if ($cleanedPaths -notcontains $trimmedPath) {
+                $cleanedPaths += $trimmedPath
+            }
         } else {
-            $invalidPaths.Add($path) | Out-Null
-            Write-Verbose "Identified invalid or non-existent path: '$path'"
+            if ($invalidPaths -notcontains $trimmedPath) {
+                $invalidPaths += $trimmedPath
+            }
+            Write-Verbose "Identified invalid or non-existent path: '$trimmedPath'"
         }
     }
     
     # Sort for consistent order
-    return ($cleanedPaths.ToArray() | Sort-Object), $invalidPaths.ToArray()
+    return @{
+        Cleaned = $cleanedPaths | Sort-Object
+        Invalid = $invalidPaths | Sort-Object
+    }
 }
 
 Write-Host "`n--- Processing System PATH ---" -ForegroundColor Yellow
@@ -383,7 +390,9 @@ $systemPathCandidates = @()
 $systemPathCandidates += $currentSystemPathEntries
 $systemPathCandidates += $newSystemPathEntries
 $systemPathCandidates = $systemPathCandidates | Select-Object -Unique
-$cleanedSystemPaths, $removedSystemPaths = Clean-PathEntries -PathEntries $systemPathCandidates
+$systemCleanResult = Clean-PathEntries -PathEntries $systemPathCandidates
+$cleanedSystemPaths = $systemCleanResult.Cleaned
+$removedSystemPaths = $systemCleanResult.Invalid
 
 Write-Host "`n--- Processing User PATH ---" -ForegroundColor Yellow
 # Combine old and new paths robustly
@@ -391,7 +400,9 @@ $userPathCandidates = @()
 $userPathCandidates += $currentUserPathEntries
 $userPathCandidates += $newUserPathEntries
 $userPathCandidates = $userPathCandidates | Select-Object -Unique
-$cleanedUserPaths, $removedUserPaths = Clean-PathEntries -PathEntries $userPathCandidates
+$userCleanResult = Clean-PathEntries -PathEntries $userPathCandidates
+$cleanedUserPaths = $userCleanResult.Cleaned
+$removedUserPaths = $userCleanResult.Invalid
 
 # --- Display Proposed Changes ---
 Write-Host "`n--- Proposed PATH Changes ---" -ForegroundColor Cyan
